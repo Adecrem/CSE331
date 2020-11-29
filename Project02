@@ -1,0 +1,216 @@
+"""
+PROJECT 2 - Linked List Recursion
+Name: Andrew Decrem
+PID: A57842779
+"""
+
+
+class LinkedNode:
+    # DO NOT MODIFY THIS CLASS #
+    __slots__ = '_value', '_next'
+
+    def __init__(self, value, next=None):
+        """
+        DO NOT EDIT
+        Initialize a node
+        :param value: value of the node
+        :param next: pointer to the next node in the LinkedList, default is None
+        """
+        self._value = value  # element at the node
+        self._next = next  # reference to next node in the LinkedList
+
+    def __repr__(self):
+        """
+        DO NOT EDIT
+        String representation of a node
+        :return: string of value
+        """
+        return str(self._value)
+
+    __str__ = __repr__
+
+    def get_value(self):
+        return self._value
+
+    def get_next(self):
+        return self._next
+
+    def set_value(self, value):
+        self._value = value
+
+    def set_next(self, next):
+        self._next = next
+
+
+# IMPLEMENT THESE FUNCTIONS - DO NOT MODIFY FUNCTION SIGNATURES #
+
+
+def insert(value, node=None):
+    """
+    This function will insert a newly made node to the back of the list,
+    I have included edge cases as well in case the node is none,
+    or if we are not at the tail, to recursively go back.
+    :param value: value of the node
+    :param node: node position
+    :return: return head of list
+    """
+    if node is None:
+        return LinkedNode(value, None)
+    elif node.get_next() is not None:
+        insert(value, node._next)
+    else:
+        node._next = LinkedNode(value)
+    return node
+
+
+def to_string(node):
+    """
+    This function will take a list of nodes and turn them
+    into a string.
+    :param node: Location
+    :return: the node in text form
+    """
+    nodeString = str(node)
+    if node is None:
+        return ""
+    else:
+        nodeString += ', ' + to_string(node._next)
+    return nodeString.rstrip(', ')
+
+
+def remove(value, node):
+    """
+    This function has the ability to remove a node from any location.
+    :param value: vale of node to be removed
+    :param node: location
+    :return: head
+    """
+    if node is None:
+        return None
+    elif length(node) == 1:
+        return None
+    elif node._value == value:
+        node = node._next
+    elif node._next._value == value:
+        node._next = node._next._next
+    elif node is not None:
+        remove(value, node._next)
+    return node
+
+
+def remove_all(value, node):
+    """
+    This function has the ability to remove every node that holds
+    a certain value.
+    :param value: value to remove
+    :param node: locataion
+    :return: head
+    """
+    if node is None:
+        return None
+    elif length(node) == 1:
+        return None
+    elif node._value == value:
+        node = remove_all(value, node._next)
+    elif node._next._value == value:
+        node._next = remove_all(value, node._next)
+    elif node is not None:
+        remove_all(value, node._next)
+    return node
+
+
+def search(value, node):
+    """
+    This function has the ability to give
+    a boolean response to whether the list has
+    a certain node or not.
+    :param value: value to be found
+    :param node: location
+    :return: head
+    """
+    if node is not None:
+        if node._value == value:
+            return True
+        return search(value, node._next)
+    return False
+
+
+def length(node):
+    """
+    This function returns the length of the linked list
+    :param node: location
+    :return: length of list
+    """
+    if node is None:
+        return 0
+    else:
+        return 1 + length(node._next)
+
+def sum_list(node):
+    """
+    This function returns the sum of the list
+    :param node: location
+    :return: the sum of every value
+    """
+    if node is None:
+        return 0
+    else:
+        value = node.get_value() + sum_list(node._next)
+    return value
+
+
+def count(value, node):
+    """
+    This function returns a count of the amount
+    of times that a value is in the list
+    :param value: value being looked for
+    :param node: location
+    :return: number of times in list
+    """
+    result = 0
+    if node is None:
+        return 0
+    if node.get_value() == value:
+        result += 1
+    if node._next is not None:
+        result += count(value, node._next)
+    return result
+
+
+def reverse(node):
+    """
+    This function reverses an entire linked list
+    :param node: location
+    :return: head of reversed link
+    """
+    if node is None:
+        return None
+    if node._next is None:
+        return node
+    tmp = reverse(node._next)
+    node._next._next = node
+    node._next = None
+    return tmp
+
+
+
+def list_percentage(node, percentage, counter=0):
+    """
+
+    :param node:
+    :param percentage:
+    :param counter:
+    :return:
+    """
+    if node is None:
+        return None
+    if node.next is not None:
+        counter += 1
+        list_percentage(node._next, percentage, counter)
+
+    if counter is 1:
+        return to_string(node)
+
+    num = counter*percentage
+    stringForm = to_string(node[:-num])
+    return stringForm
