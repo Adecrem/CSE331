@@ -1,0 +1,246 @@
+"""
+Project 4 - Circular Queues
+Name: Andrew Decrem
+"""
+from collections import defaultdict
+
+
+class CircularQueue:
+    """
+    Circular Queue Class.
+    """
+
+    # DO NOT MODIFY THESE METHODS
+    def __init__(self, capacity=4):
+        """
+        Initialize the queue with an initial capacity
+        :param capacity: the initial capacity of the queue
+        """
+        self.capacity = capacity
+        self.size = 0
+        self.data = [None] * capacity
+        self.head = 0
+        self.tail = 0
+
+    def __eq__(self, other):
+        """
+        Defines equality for two queues
+        :return: true if two queues are equal, false otherwise
+        """
+        if self.capacity != other.capacity or self.size != other.size:
+            return False
+
+        if self.head != other.head or self.tail != other.tail:
+            return False
+
+        for i in range(self.capacity):
+            if self.data[i] != other.data[i]:
+                return False
+
+        return True
+
+    def __str__(self):
+        """
+        String representation of the queue
+        :return: the queue as a string
+        """
+        if self.is_empty():
+            return "Empty queue"
+
+        str_list = [str(self.data[(self.head + i) % self.capacity]) for i in range(self.size)]
+        return "Queue: " + ", ".join(str_list)
+
+    # -----------MODIFY BELOW--------------
+
+    def is_empty(self):
+        """
+        self: the queue
+        :return: True if empty, false if not
+        This function checks the size of a list and then returns whether it is empty
+        """
+        if self.size == 0:
+            return True
+        else:
+            return False
+
+    def __len__(self):
+        """
+        :self: the queue
+        :return: returns 0 if empty and the size if not
+        This function checks if the list is empty and from there returns the value if not
+        """
+        if self.is_empty():
+            return 0
+        else:
+            return self.size
+
+    def head_element(self):
+        """
+        self: the queue
+        :return: None if empty and the head if not
+        This function returns the head element of the queue
+        """
+        if self.is_empty():
+            return None
+        else:
+            return self.data[self.head]
+
+    def tail_element(self):
+        """
+        self: the queue
+        :return: None if empty and the tail element if not
+        This function checks if the queue is empty adn returns the tail element if not
+        """
+        if self.is_empty():
+            return None
+        else:
+            return self.data[self.size-1]
+
+    def grow(self):
+        """
+        self: the queue
+        :return: None
+        This function will double the capacity of the list if the size meets or exceeds the capacity
+        """
+        old = self.data
+        num = self.capacity * 2
+        self.data = [None] * num
+        walk = self.head
+        for k in range(self.size):
+            self.data[k] = old[walk]
+            walk = (1 + walk) % len(old)
+        self.head = 0
+        self.tail = self.size
+        self.capacity = self.capacity * 2
+
+
+    def shrink(self):
+        """
+        self: the queue
+        :return: None
+        This function shrinks the capacity of the queue if the size is 1/4 of the capacity and 1/2
+        the capacity will be greater than or equal to 4
+        """
+        if self.size <= (self.capacity / 4) and (self.capacity / 2) >= 4:
+            old = self.data
+            num = self.capacity // 2
+            self.data = [None] * num
+            walk = self.head
+            for k in range(self.size):
+                self.data[k] = old[walk]
+                walk = (1 + walk) % len(old)
+            self.head = 0
+            self.tail = self.size
+            self.capacity = self.capacity // 2
+
+    def enqueue(self, val):
+        """
+        self: the queue
+        val: the value to be inserted
+        :return: None
+        This function inserts a value to the end of the queue along with reassigning the head and other values
+        if the size is greater than or equal to the capacity it will call the grow function
+        """
+        avail = (self.head + self.size) % len(self.data)
+        self.data[avail] = val
+        self.size += 1
+        self.tail = avail + 1
+        if self.size >= self.capacity:
+            self.grow()
+
+    def dequeue(self):
+        """
+        self: the queue
+        :return: the value being taken out
+        :return: None if empty
+        This function checks if the list is empty, if not it will take away the head value
+        and reassign the other values. If shrink is satisfied it will call it.
+        """
+        avail = (self.head + self.size) % len(self.data)
+        if self.is_empty():
+            return None
+        answer = self.data[self.head]
+        self.data[self.head] = None
+        self.head = (self.head + 1) % len(self.data)
+        self.size -= 1
+        self.tail = avail
+        #self.head = self.head + 1
+        self.shrink()
+        return answer
+
+
+
+class QStack:
+    """
+    Stack class, implemented with underlying Circular Queue
+    """
+    # DO NOT MODIFY THESE METHODS
+    def __init__(self):
+        self.cq = CircularQueue()
+        self.size = 0
+
+    def __eq__(self, other):
+        """
+        Defines equality for two QStacks
+        :return: true if two stacks are equal, false otherwise
+        """
+        if self.size != other.size:
+            return False
+
+        if self.cq != other.cq:
+            return False
+
+        return True
+
+    def __str__(self):
+        """
+        String representation of the QStack
+        :return: the stack as a string
+        """
+        if self.size == 0:
+            return "Empty stack"
+
+        str_list = [str(self.cq.data[(self.cq.head + i) % self.cq.capacity]) for i in range(self.size)]
+        return "Stack: " + ", ".join(str_list)
+
+    # -----------MODIFY BELOW--------------
+    def push(self, val):
+        """
+        self: the queue
+        val: the value to be inserted
+        :return: None
+        This function inserts a value into a stack
+        """
+        self.cq.enqueue(val)
+        self.size += 1
+
+    def pop(self):
+        """
+        self: the queue
+        :return: None if empty
+        :return: Top value if not empty
+        This function removes the top value from the list and returns it if not empty
+        """
+        temp = self.cq.tail_element()
+        if self.cq.is_empty():
+            return None
+        else:
+            self.cq.dequeue()
+            self.size -= 1
+            return temp
+
+    def top(self):
+        """
+        self: the queue
+        :return: if empty None
+        :return: The top element in the stack
+        This function returns the top element in the stack without removing it
+        """
+        if self.cq.is_empty():
+            return None
+        else:
+            return self.cq.tail_element()
+
+
+def digit_swap(nums, replacements):
+    pass
