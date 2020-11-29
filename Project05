@@ -1,0 +1,551 @@
+import queue
+"""
+PROJECT 5 - AVL Trees
+Name: Andrew Decrem
+"""
+
+
+class TreeNode:
+    # DO NOT MODIFY THIS CLASS #
+    __slots__ = 'value', 'parent', 'left', 'right', 'height'
+
+    def __init__(self, value, parent=None, left=None, right=None):
+        """
+        Initialization of a node
+        :param value: value stored at the node
+        :param parent: the parent node
+        :param left: the left child node
+        :param right: the right child node
+        """
+        self.value = value
+        self.parent = parent
+        self.left = left
+        self.right = right
+        self.height = 0
+
+    def __eq__(self, other):
+        """
+        Determine if the two nodes are equal
+        :param other: the node being compared to
+        :return: true if the nodes are equal, false otherwise
+        """
+        if type(self) is not type(other):
+            return False
+        return self.value == other.value
+
+    def __str__(self):
+        """String representation of a node by its value"""
+        return str(self.value)
+
+    def __repr__(self):
+        """String representation of a node by its value"""
+        return str(self.value)
+
+
+class AVLTree:
+
+    def __init__(self):
+        # DO NOT MODIFY THIS FUNCTION #
+        """
+        Initializes an empty Binary Search Tree
+        """
+        self.root = None
+        self.size = 0
+
+    def __eq__(self, other):
+        # DO NOT MODIFY THIS FUNCTION #
+        """
+        Describe equality comparison for BSTs ('==')
+        :param other: BST being compared to
+        :return: True if equal, False if not equal
+        """
+        if self.root is None and other.root is None:
+            return True
+
+        if self.size != other.size or self.root != other.root:
+            return False  # size & root comp
+
+        return self._is_equal(self.root.left, other.root.left) and self._is_equal(self.root.right, other.root.right)
+
+    def _is_equal(self, root1, root2):
+        # DO NOT MODIFY THIS FUNCTION #
+        """
+        Checks if rootts are both not None then calls _compare, otherwise checks their equality.
+        :param root1: root node of first tree
+        :param root2: root node of second tree
+        :return: True if equal, False if not
+        """
+        return self._compare(root1, root2) if root1 and root2 else root1 == root2
+
+    def _compare(self, t1, t2):
+        # DO NOT MODIFY THIS FUNCTION #
+        """
+        Recursively compares two trees, used in __eq__.
+        :param t1: root node of first tree
+        :param t2: root node of second tree
+        :return: True if equal, False if not
+        """
+        if t1 is None or t2 is None:
+            return t1 == t2
+        if t1 != t2:
+            return False
+        return self._compare(t1.left, t2.left) and self._compare(t1.right, t2.right)
+
+    def __str__(self):
+        """
+        Collects a visual representation of AVL tree
+        :return: string of AVL tree
+        """
+        if not self.root:
+            return "Empty AVL Tree..."
+
+        root = self.root
+        ans = ""
+        bfs_queue = []
+        track = {}
+        bfs_queue.append((root, 0, root.parent))
+        h = AVLTree.height(self.root)
+
+        for i in range(h+1):
+            track[i] = []
+
+        while bfs_queue:
+            node = bfs_queue.pop(0)
+            if node[1] > h:
+                break
+            track[node[1]].append(node)
+
+            if node[0] is None:
+                bfs_queue.append((None, node[1] + 1, None))
+                bfs_queue.append((None, node[1] + 1, None))
+                continue
+
+            if node[0].left:
+                bfs_queue.append((node[0].left, node[1] + 1, node[0]))
+            else:
+                bfs_queue.append((None,  node[1] + 1, None))
+
+            if node[0].right:
+                bfs_queue.append((node[0].right, node[1] + 1, node[0]))
+            else:
+                bfs_queue.append((None,  node[1] + 1, None))
+
+        spaces = pow(2, h) * 12
+        ans += "\n"
+        ans += "\t\tVisual Level Order Traversal of AVL Tree - Node (Parent Height)".center(spaces)
+        ans += "\n\n"
+        for i in range(h+1):
+            ans += f"Level {i}: "
+            for node in track[i]:
+                level = pow(2, i)
+                space = int(round(spaces / level))
+                if node[0] is None:
+                    ans += " " * space
+                    continue
+                ans += "{} ({} {})".format(node[0], node[2], node[0].height).center(space, " ")
+            ans += "\n"
+        return ans
+
+    # ------- Implement/Modify the functions below ------- #
+
+    def insert(self, node, value):
+        """
+        Inserts a node to a AVL Tree
+        :param self: list to insert
+        :param node: node to insert
+        :param value: value to insert
+        :return: None
+        This function inserts a node into a AVL tree and considers all things, such as parents and the proper place
+        """
+        newnode = TreeNode(value, node)
+        inroot = TreeNode(value)
+        if node is None:
+            self.root = inroot
+            self.size += 1
+        elif node.value == value:
+            return
+        elif node.value > value:
+            if node.left is None:
+                node.left = newnode
+                self.size += 1
+            elif node.left.value != value:
+                self.insert(node.left, value)
+        else:
+            if node.right is None:
+                node.right = newnode
+                self.size += 1
+            elif node.right.value != value:
+                self.insert(node.right, value)
+        if node is not None:
+            if self.height(node.right) < self.height(node.left):
+                self.update_height(node.left)
+            elif self.height(node.right) > self.height(node.left):
+                self.update_height(node.right)
+            self.rebalance(node)
+        return
+
+
+    def remove(self, node, value):
+        """
+        Removes a node to a AVL Tree
+        :param self: list to remove
+        :param node: node to remove
+        :param value: value to insert
+        :return: None
+        This function removes a node based on the value given and accounts for multiple edge cases
+        """
+        if node is None:
+            return None
+        elif node.value < value:
+            self.remove(node.right, value)
+        elif node.value > value:
+            self.remove(node.left, value)
+        elif node.value == value:
+            if node.left is not None and node.right is not None:
+                max_left = self.max(node.left).value
+                node.value = max_left
+                self.remove(node.left, max_left)
+            elif node.left is not None:
+                node.value = node.left.value
+                node.left = None
+                self.size -= 1
+            elif node.right is not None:
+                node.value = node.right.value
+                node.right = None
+                self.size -= 1
+            else:
+                if node.parent is None:
+                    node = None
+                    self.root = None
+                    self.size -= 1
+                    return None
+                else:
+                    if node.parent.left == node:
+                        node.parent.left = None
+                        self.size -= 1
+                    elif node.parent.right == node:
+                        node.parent.right = None
+                        self.size -= 1
+        if node is not None:
+            if self.height(node.right) < self.height(node.left):
+                self.update_height(node.left)
+            elif self.height(node.right) > self.height(node.left):
+                self.update_height(node.right)
+            rebalanced = self.rebalance(node)
+        return rebalanced
+
+
+
+
+    @staticmethod
+    def height(node):
+        """
+        Gets height of node
+        :param node: node to check height
+        :return: height of node
+        This function returns the height of the node and if it's none it will return -1
+        """
+        if node is None:
+            return -1
+        return node.height
+
+    @staticmethod
+    def update_height(node):
+        """
+        Updates height of node
+        :param node: updates the height of a node on the height of each side
+        :return: None unless None
+        """
+        if node is None:
+            return 0
+        lheight = -1
+        if node.left is not None:
+            lheight = node.left.height
+        rheight = -1
+        if node.right is not None:
+            rheight = node.right.height
+
+        node.height = max(lheight, rheight) + 1
+
+    def depth(self, value):
+        """
+        Finds depth of a node
+        :param self: list to sort
+        :param value: value to check depth
+        :return: Depth
+        This function checks the depth of a node given the value of it.
+        """
+        depth = 0
+        node = self.root
+        if node is None:
+            return -1
+        while node.value != value and node is not None:
+            depth += 1
+            if value > node.value:
+                node = node.right
+            elif node.value > value:
+                node = node.left
+        return depth
+
+
+    def search(self, node, value):
+        """
+        Searches for a node
+        :param self: list to sort
+        :param node: node to insert
+        :param value: value to insert
+        :return: Node
+        This is a recursive function that finds the node in a tree.
+        """
+        if node is None:
+            return None
+        elif value == node.value:
+            return node
+        elif node.value < value:
+            if node.right is None:
+                return node
+            return self.search(node.right, value)
+        else:
+            if node.left is None:
+                return node
+            return self.search(node.left, value)
+
+    def inorder(self, node):
+        """
+        Inorder sort of a tree
+        :param self: list to sort
+        :param node: node to insert
+        :return: A generator
+        This goes inorder and uses a generator
+        """
+        if node is not None:
+            yield from self.inorder(node.left)
+            yield node
+            yield from self.inorder(node.right)
+        else:
+            return
+
+    def preorder(self, node):
+        """
+        preorder sort of a tree
+        :param self: list to sort
+        :param node: node to insert
+        :return: A generator
+        This goes preorder and uses a generator
+        """
+        if node is not None:
+            yield node
+            yield from self.preorder(node.left)
+            yield from self.preorder(node.right)
+        else:
+            return
+
+    def postorder(self, node):
+        """
+        postorder sort of a tree
+        :param self: list to sort
+        :param node: node to insert
+        :return: A generator
+        This goes postorder and uses a generator
+        """
+        if node is not None:
+            yield from self.postorder(node.left)
+            yield from self.postorder(node.right)
+            yield node
+        else:
+            return
+    def bfs(self):
+        """
+        bfs sort of a tree
+        :param self: list to sort
+        :return: A generator
+        This function uses breadth first and sorts through and returns a queue
+        """
+        que = queue.Queue()
+        node = self.root
+        if self.root == None:
+            return
+        while que.empty is False:
+            que.put(self.root.left)
+            que.put(self.root.right)
+        yield node
+
+    def min(self, node):
+        """
+        Min value of a tree
+        :param self: list to sort
+        :param node: node to check
+        :return: Min value
+        This function returns the minimum value of a tree
+        """
+        if node is None:
+            return None
+        elif node.left == None:
+            return node
+        else:
+            return self.min(node.left)
+
+    def max(self, node):
+        """
+        max value of a tree
+        :param self: list to sort
+        :param node: node to check
+        :return: max value
+        This function returns the maximum value of a tree
+        """
+        if node is None:
+            return None
+        elif node.right is None:
+            return node
+        else:
+            return self.max(node.right)
+
+    def get_size(self):
+        """
+        size of a tree
+        :param self: list to sort
+        :return: Returns the size of a tree
+        This function returns the minimum value of a tree
+        """
+        return self.size
+
+    @staticmethod
+    def get_balance(node):
+        """
+        Get balance
+        :param node: node to find balance
+        :return: Min value
+        This function returns the balance of a tree
+        """
+        if node is None:
+            return 0
+        lheight = -1
+        if node.left != None:
+            lheight = node.left.height
+        rheight = -1
+        if node.right != None:
+            rheight = node.right.height
+        return lheight - rheight
+
+    @staticmethod
+    def set_child(parent, child, is_left):
+        """
+        Sets child of a tree
+        :param parent: list to sort
+        :param child: node to insert
+        :param is_left: Boolean if left
+        :return: None
+        This function sets the child to a parent, depending on left or right
+        """
+        if is_left == True:
+            parent.left = child
+        elif is_left == False:
+            parent.right = child
+        if child != None:
+            child.parent = parent
+        AVLTree.update_height(parent)
+
+    @staticmethod
+    def replace_child(parent, current_child, new_child):
+        """
+        Replaces child in tree
+        :param parent: list to sort
+        :param child: node to insert
+        :param new_child: Boolean if left
+        :return: None
+        This function replaces the child
+        """
+        if (parent.left == current_child):
+            current_child = current_child.left
+            return AVLTree.set_child(parent, new_child, True)
+        elif (parent.right == current_child):
+            current_child = current_child.right
+            return AVLTree.set_child(parent, new_child, False)
+
+    def left_rotate(self, node):
+        """
+        left rotation of a tree
+        :param self: list to sort
+        :param node: node to parse
+        :return: None unless None
+        Rotates function left
+        """
+        if node is None:
+            return 0
+        rightleftchild = node.right.left
+        if node.parent != None:
+            self.replace_child(node.parent, node, node.right)
+        else:
+            self.root = node.right
+            self.root.parent = None
+        self.set_child(node.right, node, True)
+        self.set_child(node, rightleftchild, False)
+        self.update_height(node.parent)
+
+
+    def right_rotate(self, node):
+        """
+        Right rotation of a tree
+        :param self: list to sort
+        :param node: node to parse
+        :return: None unless None
+        Rotates function Right
+        """
+        if node is None:
+            return 0
+        leftrightchild = node.left.right
+        if node.parent != None:
+            self.replace_child(node.parent, node, node.left)
+        else:
+            self.root = node.left
+            self.root.parent = None
+        self.set_child(node.left, node, False)
+        self.set_child(node, leftrightchild, True)
+        self.update_height(node.parent)
+
+    def rebalance(self, node):
+        """
+        Rebalances tree
+        :param self: list to sort
+        :param node: node to parse
+        :return: Node
+        Rebalances tree if balance is met
+        """
+        self.update_height(node)
+        if (self.get_balance(node) == -2):
+            if (self.get_balance(node.right) == 1):
+                self.right_rotate(node.right)
+            return self.left_rotate(node)
+        elif self.get_balance(node) == 2:
+            if self.get_balance(node.left) == -1:
+                self.left_rotate(node.left)
+            return self.right_rotate(node)
+        return node
+
+
+# ------- Application Problem ------- #
+def height_help(node):
+    """
+    Helper to find height in AVL Tree
+    :param node: node to parse
+    Finds the height based on the node
+    """
+    if node is None:
+        return 0
+    return max(height_help(node.left), height_help(node.right)) + 1
+
+def is_avl_tree(node):
+    """
+    returns whether or not the tree is AVL and balanced
+    :param node: node to parse
+    returns true or false based on whether or not the tree is avl
+    """
+    if node is None:
+        return True
+    dif = height_help(node.left) - height_help(node.right)
+    if abs(dif) > 1:
+        return False
+    else:
+        return is_avl_tree(node.left) and is_avl_tree(node.right)
+
+
