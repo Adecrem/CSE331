@@ -1,0 +1,142 @@
+"""
+Name: Andrew Decrem
+PID: A57842779
+"""
+
+def swap(unsorted, left, right):
+    """
+    Swaps two numbers
+    :param unsorted: list to sort
+    :param left: let value
+    :param right: right value
+    :return: None
+    """
+    temp = unsorted[left]
+    unsorted[left] = unsorted[right]
+    unsorted[right] = temp
+
+
+def quick_sort(unsorted, threshold, start, end, reverse=False):
+    """
+    quick sort function that sorts in place
+    :param unsorted: list to sort
+    :param threshold: when to call insertion_sort
+    :param start: first value
+    :param end: last value
+    :param reverse: to return list reversed
+    :return: None
+    """
+    size = len(unsorted)
+    if size <= threshold:
+        insertion_sort(unsorted, start, end, reverse)
+        return
+    j = 0
+    if start >= end:
+        return
+    j = subdivide(unsorted, start, end, reverse)
+
+    quick_sort(unsorted, threshold, start, j, reverse)
+    quick_sort(unsorted, threshold, j + 1, end, reverse)
+    return
+
+def subdivide(unsorted, start, end, reverse):
+    """
+    Partitions list
+    :param unsorted: list to sort
+    :param start: first value
+    :param end: last value
+    :param reverse: to return list reversed
+    :return: index of pivot
+    """
+    pivot = find_pivot(unsorted, start, end)
+    done = False
+    first = start
+    last = end
+    while not done:
+        if reverse == False:
+            while unsorted[first] < pivot:
+                first = first + 1
+            while pivot < unsorted[last]:
+                last = last - 1
+            if first >= last:
+                done = True
+            else:
+                swap(unsorted, first, last)
+                first = first + 1
+                last = last - 1
+        if reverse == True:
+            while unsorted[first] > pivot:
+                first = first + 1
+            while pivot > unsorted[last]:
+                last = last - 1
+            if first >= last:
+                done = True
+            else:
+                swap(unsorted, first, last)
+                first = first + 1
+                last = last - 1
+    return last
+
+
+def find_pivot(unsorted, start, end):
+    """
+    Finds pivot point with median of 3
+    :param unsorted: list to sort
+    :param start: first value
+    :param end: last value
+    :return: value of pivot
+    """
+    mid = start + (end - start) // 2
+    if unsorted[start] > unsorted[end]:
+        swap(unsorted, start, end)
+    if unsorted[mid] < unsorted[start]:
+        swap(unsorted, mid, start)
+    if unsorted[end] < unsorted[mid]:
+        swap(unsorted, end, mid)
+    return unsorted[mid]
+
+def insertion_sort(unsorted, start, end, reverse):
+    """
+    insertion sort function that sorts in place
+    :param unsorted: list to sort
+    :param start: first value
+    :param end: last value
+    :param reverse: to return list reversed
+    :return: None
+    """
+    size = len(unsorted)
+    if reverse == False:
+        for i in range(1, size):
+            j = i
+            while (j > 0) and (unsorted[j] < unsorted[j-1]):
+                temp = unsorted[j]
+                unsorted[j] = unsorted[j - 1]
+                unsorted[j - 1] = temp
+                j -= 1
+    if reverse == True:
+        for i in range(1, size):
+            j = i
+            while (j > 0) and (unsorted[j] > unsorted[j-1]):
+                temp = unsorted[j]
+                unsorted[j] = unsorted[j - 1]
+                unsorted[j - 1] = temp
+                j -= 1
+
+
+def largest_sequential_difference(lst):
+    """
+    finds the largest difference between two numbers in list
+    :param lst: list to sort
+    :return: largest sequential difference in list
+    """
+    if len(lst) < 2:
+        return None
+    quick_sort(lst, 4, 0, len(lst)-1, False)
+    nlst = [abs(k) for k in lst]
+    if len(nlst) == 2:
+        final = nlst[-1] - nlst[0]
+        return final
+    dlst = [nlst[i+1]-nlst[i] for i in range(len(nlst)-1)]
+    flst = [abs(y) for y in dlst]
+    quick_sort(flst, 4, 0, len(flst)-1, False)
+    return flst[-1]
