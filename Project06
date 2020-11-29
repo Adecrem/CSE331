@@ -1,0 +1,266 @@
+"""
+PROJECT 6 - Priority Queues and Heaps
+Name: Andrew Decrem
+"""
+class Node:
+    """
+    This class represents a node object with k (key) and v (value)
+    Node definition should not be changed in any way
+    """
+
+    def __init__(self, k, v):
+        """
+        Initializes node
+        :param k: key to be stored in the node
+        :param v: value to be stored in the node
+        """
+        self.key = k
+        self.value = v
+
+    def __lt__(self, other):
+        """
+        Less than comparator
+        :param other: second node to be compared to
+        :return: True if the node is less than other, False otherwise
+        """
+        return self.key < other.key or (self.key == other.key and self.value < other.value)
+
+    def __gt__(self, other):
+        """
+        Greater than comparator
+        :param other: second node to be compared to
+        :return: True if the node is greater than other, False otherwise
+        """
+        return self.key > other.key or (self.key == other.key and self.value > other.value)
+
+    def __eq__(self, other):
+        """
+        Equality comparator
+        :param other: second node to be compared to
+        :return: True if the nodes are equal, False otherwise
+        """
+        return self.key == other.key and self.value == other.value
+
+    def __str__(self):
+        """
+        Converts node to a string
+        :return: string representation of node
+        """
+        return '({0},{1})'.format(self.key, self.value)
+
+    __repr__ = __str__
+
+
+class PriorityHeap:
+    """
+    Partially completed data structure. Do not modify completed portions in any way
+    """
+
+    def __init__(self, is_min=True):
+        """
+        Initializes the priority heap
+        """
+        self._data = []
+        self.min = is_min
+
+    def __str__(self):
+        """
+        Converts the priority heap to a string
+        :return: string representation of the heap
+        """
+        return ', '.join(str(item) for item in self._data)
+
+    def __len__(self):
+        """
+        Length override function
+        :return: Length of the data inside the heap
+        """
+        return len(self._data)
+
+    __repr__ = __str__
+
+#   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#   Modify below this line
+
+    def empty(self):
+        """
+        Checks if queue is empty
+        :param self: queue
+        :return: Bool
+        Returns if the list is empty or not
+        """
+        if len(self) == 0:
+            return True
+        else:
+            return False
+
+    def top(self):
+       if self.empty():
+           return None
+       else:
+            return self._data[0].value
+
+    def push(self, key, val):
+        """
+        Pushes node into queue
+        :param self: queue
+        :param key: key to insert
+        :param val: val to insert
+        :return: None
+        Pushes new node into queue
+        """
+        size = len(self)
+        node = Node(key, val)
+        self._data.append(node)
+        self.percolate_up(size)
+
+    def pop(self):
+        """
+        Pops node from queue
+        :param self: queue
+        :return: Popped value
+        Pops the top node from a queue
+        """
+        if self.empty():
+            return None
+        size = len(self)
+        if size > 0:
+            self.swap(0, size - 1)
+            popped = self._data.pop()
+            self.percolate_down(0)
+            return popped
+
+    def min_child(self, index):
+        """
+        Finds min child of node
+        :param self: list
+        :param index: index of parent to check
+        :return: Return minumum child index
+        Finds the minumum child of a queue and returns its index
+        """
+        small = None
+        right = (2 * index) + 2
+        left = (2 * index) + 1
+        if left is None:
+            return None
+        if right is None:
+            return left
+        if self._data[right] == self._data[left]:
+            return right
+        size = len(self) - 1
+        if left <= size:
+            small = left
+            if right <= size:
+                if self._data[right] < self._data[left]:
+                    small = right
+        return small
+
+    def max_child(self, index):
+        """
+        Finds max child of node
+        :param self: list
+        :param index: index of parent to check
+        :return: Return maximum child index
+        Finds the maximum child of a queue and returns its index
+        """
+        large = None
+        right = (2 * index) + 2
+        left = (2 * index) + 1
+        if left is None:
+            return None
+        if right is None:
+            return left
+        if self._data[right] == self._data[left]:
+            return right
+        size = len(self) - 1
+        if left <= size:
+            large = left
+            if right <= size:
+                if self._data[right] > self._data[left]:
+                    large = right
+        return large
+
+    def swap(self, i, j):
+        """
+        Finds min child of node
+        :param self: list
+        :param i: index 1
+        :param j: index 2
+        :return: Return minumum child index
+        Finds the minumum child of a queue and returns its index
+        """
+        self._data[i], self._data[j] = self._data[j], self._data[i]
+
+    def percolate_up(self, index):
+        """
+        Perculate list up
+        :param self: list
+        :param index: index of parent to check
+        :return: None
+        Perculates up a list to the proper position
+        """
+        parentIndex = (index - 1) // 2
+        if self.min is True:
+            if index > 0 and self._data[index] < self._data[parentIndex]:
+                self.swap(parentIndex, index)
+                self.percolate_up(parentIndex)
+        if self.min is False:
+            if index > 0 and self._data[index] > self._data[parentIndex]:
+                self.swap(parentIndex, index)
+                self.percolate_up(parentIndex)
+
+    def percolate_down(self, index):
+        """
+        Perculates down a list
+        :param self: list
+        :param index: index of parent to check
+        :return: None
+        Perculates down a list to the proper position
+        """
+        if self.min is True:
+            size = len(self)
+            left = (index * 2) + 1
+            small = left
+            if left < size:
+                right = (index * 2) + 2
+                if right < size:
+                    if self._data[right] < self._data[left] or self._data[right] == self._data[left]:
+                        small = right
+                if self._data[small] < self._data[index]:
+                    self.swap(index, small)
+                    self.percolate_down(small)
+        if self.min is False:
+            size = len(self)
+            left = (index * 2) + 1
+            small = left
+            if left < size:
+                right = (index * 2) + 2
+                if right < size:
+                    if self._data[right] > self._data[left] or self._data[right] == self._data[left]:
+                        small = right
+                if self._data[small] > self._data[index]:
+                    self.swap(index, small)
+                    self.percolate_down(small)
+
+
+#def heap_sort(array):
+    """
+    Finds min child of node
+    :param array: array to sort
+    :return: Sorted list
+    Sort a list using priority heap functions
+    """
+#    pass
+
+#def current_medians(values):
+    """
+    Finds min child of node
+    :param values: values to find current median of
+    :return: list of current medians
+    Using priority queue methods find the current medians
+    """
+    # if values is None:
+    #     return []
+    # lst = PriorityHeap()
+    # size = len(values)
+#    pass
